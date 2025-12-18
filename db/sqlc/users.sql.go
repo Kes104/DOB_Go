@@ -7,7 +7,8 @@ package sqlc
 
 import (
 	"context"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -18,11 +19,11 @@ RETURNING id, name, dob
 
 type CreateUserParams struct {
 	Name string
-	Dob  time.Time
+	Dob  pgtype.Date
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Name, arg.Dob)
+	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Dob)
 	var i User
 	err := row.Scan(&i.ID, &i.Name, &i.Dob)
 	return i, err
@@ -33,7 +34,7 @@ DELETE FROM users WHERE id = $1
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	_, err := q.db.Exec(ctx, deleteUser, id)
 	return err
 }
 
@@ -42,7 +43,7 @@ SELECT id, name, dob FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(&i.ID, &i.Name, &i.Dob)
 	return i, err
@@ -53,7 +54,7 @@ SELECT id, name, dob FROM users ORDER BY id
 `
 
 func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, listUsers)
+	rows, err := q.db.Query(ctx, listUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +66,6 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -85,11 +83,11 @@ RETURNING id, name, dob
 type UpdateUserParams struct {
 	ID   int32
 	Name string
-	Dob  time.Time
+	Dob  pgtype.Date
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUser, arg.ID, arg.Name, arg.Dob)
+	row := q.db.QueryRow(ctx, updateUser, arg.ID, arg.Name, arg.Dob)
 	var i User
 	err := row.Scan(&i.ID, &i.Name, &i.Dob)
 	return i, err

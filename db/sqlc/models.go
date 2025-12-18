@@ -5,11 +5,11 @@
 package sqlc
 
 import (
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type User struct {
 	ID   int32
 	Name string
-	Dob  time.Time
+	Dob  pgtype.Date
 }
